@@ -4,7 +4,7 @@ NOSTACKPROTECT = -fno-stack-protector
 32BIT= -m32
 OMITFRAMEPOINTER = -fomit-frame-pointer
 
-SRC := vuln.c
+SRC := src/vuln.c
 CLEAN_TARGETS = level*
 
 SOURCES := $(wildcard $(SRC)/*.c)
@@ -55,7 +55,7 @@ level1 : $(SRC)
 level2 : $(SRC)
 	$(CC) $(SRC) -o $@ \
 	-D 'BUFFER_SIZE=30' \
-	$(NOSTACKPROTECT) $(32BIT) $(EXECSTACK) \
+	$(NOSTACKPROTECT) $(32BIT) $(EXECSTACK) $(OMITFRAMEPOINTER) \
 	-D PRINT_BUFFER_SIZE \
 	-D PRINT_INITIAL_STACK \
 	    -D 'PRINT_STACK_RANGE_LOW=-10' \
@@ -76,7 +76,7 @@ level2 : $(SRC)
 level3 : $(SRC)
 	$(CC) $(SRC) -o $@ \
 	-D 'BUFFER_SIZE=10' \
-	$(NOSTACKPROTECT) $(32BIT) \
+	$(NOSTACKPROTECT) $(32BIT) $(OMITFRAMEPOINTER) \
 	-D PRINT_BUFFER_SIZE \
 	-D PRINT_INITIAL_STACK \
         -D 'PRINT_STACK_RANGE_LOW=-10' \
@@ -130,7 +130,7 @@ level5 : $(SRC)
 level6 : $(SRC)
 	$(CC) $(SRC) -o $@ \
 	-D 'BUFFER_SIZE=67' \
-	$(NOSTACKPROTECT) $(32BIT) \
+	$(NOSTACKPROTECT) $(32BIT) $(OMITFRAMEPOINTER) \
 	-D PRINT_SECRET_LOCATION \
 	-D PRINT_BUFFER_SIZE \
 	-D PRINT_INITIAL_STACK \
@@ -139,13 +139,13 @@ level6 : $(SRC)
 	    -D PRINT_STACK_RANGE_HIGH=40 \
 	    -D CLEAR_INITIAL_BUFFER \
 	-D FUNCTION_JUMP \
-	-D 'PRINT_DESCRIPTION="\tTry to jump to the hidden function, this time the frame pointer has not been omitted.\n\n\n"' 
+	-D 'PRINT_DESCRIPTION="\tTry to jump to the hidden function, different buffer now.\n\n\n"' 
 
 # Let's try to pass arguments to the secret function now, start with something easy
 level7 : $(SRC)
 	$(CC) $(SRC) -o $@ \
 	-D 'BUFFER_SIZE=12' \
-	$(NOSTACKPROTECT) $(32BIT) \
+	$(NOSTACKPROTECT) $(32BIT) $(OMITFRAMEPOINTER) \
 	-D PRINT_SECRET_LOCATION \
 	-D PRINT_BUFFER_SIZE \
 	    -D PRINT_INITIAL_STACK \
@@ -166,7 +166,7 @@ level7 : $(SRC)
 level8 : $(SRC)
 	$(CC) $(SRC) -o $@ \
 	-D 'BUFFER_SIZE=80' \
-    $(NOSTACKPROTECT) $(32BIT) $(EXECSTACK) \
+    $(NOSTACKPROTECT) $(32BIT) $(EXECSTACK) $(OMITFRAMEPOINTER) \
     -D PRINT_SECRET_LOCATION \
     -D PRINT_BUFFER_SIZE \
     -D PRINT_INITIAL_STACK \
@@ -188,7 +188,7 @@ level8 : $(SRC)
 level9 : $(SRC)
 	$(CC) $(SRC) -o $@ \
 	-D 'BUFFER_SIZE=15' \
-    $(NOSTACKPROTECT) $(32BIT) $(EXECSTACK) \
+    $(NOSTACKPROTECT) $(32BIT) $(EXECSTACK) $(OMITFRAMEPOINTER) \
     -D PRINT_SECRET_LOCATION \
     -D PRINT_BUFFER_SIZE \
     -D PRINT_INITIAL_STACK \
@@ -210,7 +210,7 @@ level9 : $(SRC)
 level10 : $(SRC)
 	$(CC) $(SRC) -o $@ \
 	-D 'BUFFER_SIZE=80' \
-    $(NOSTACKPROTECT) $(32BIT) $(EXECSTACK) \
+    $(NOSTACKPROTECT) $(32BIT) $(EXECSTACK) $(OMITFRAMEPOINTER) \
     -D PRINT_SECRET_LOCATION \
     -D PRINT_BUFFER_SIZE \
     -D PRINT_INITIAL_STACK \
@@ -232,7 +232,7 @@ level10 : $(SRC)
 level11 : $(SRC)
 	$(CC) $(SRC) -o $@ \
 	-D 'BUFFER_SIZE=80' \
-    $(NOSTACKPROTECT) $(32BIT) $(EXECSTACK) \
+    $(NOSTACKPROTECT) $(32BIT) $(EXECSTACK) $(OMITFRAMEPOINTER) \
     -D PRINT_SECRET_LOCATION \
     -D PRINT_BUFFER_SIZE \
     -D PRINT_BUFFER_ADDRESS \
@@ -257,7 +257,7 @@ level11 : $(SRC)
 level12 : $(SRC)
 	$(CC) $(SRC) -o $@ \
 	-D 'BUFFER_SIZE=120' \
-    $(NOSTACKPROTECT) $(32BIT) $(EXECSTACK) \
+    $(NOSTACKPROTECT) $(32BIT) $(EXECSTACK) $(OMITFRAMEPOINTER) \
     -D PRINT_SECRET_LOCATION \
     -D PRINT_BUFFER_SIZE \
     -D PRINT_BUFFER_ADDRESS \
@@ -281,7 +281,7 @@ level12 : $(SRC)
 level13 : $(SRC)
 	$(CC) $(SRC) -o $@ \
 	-D 'BUFFER_SIZE=20' \
-    $(NOSTACKPROTECT) $(32BIT) $(EXECSTACK) \
+    $(NOSTACKPROTECT) $(32BIT) $(EXECSTACK) $(OMITFRAMEPOINTER) \
     -D PRINT_SECRET_LOCATION \
     -D PRINT_BUFFER_SIZE \
     -D PRINT_BUFFER_ADDRESS \
@@ -327,9 +327,8 @@ level13 : $(SRC)
 # 	-D 'PRINT_DESCRIPTION="\tThe last one of these sorts of problems. This time we want an array of structs.  \n\n\n"'
 
 # Struct containing a function pointer?
-#<ADV>?
 
-
+# Memcpy as the secret
 
 
 ###########################################
@@ -518,14 +517,44 @@ level25: $(SRC)
 	    -D CLEAR_INITIAL_BUFFER \
 	-D 'PRINT_DESCRIPTION="\t No more execl addressing, you`ll need to figure it out."'
 
+# Level 26 to 30 will be more convolutions on this for practice
 
 
+###########################################
+#  GOT                  
+###########################################
+
+# GOT Part 1
+level31: $(SRC)
+	$(CC) $(SRC) -o $@ \
+	$(NOSTACKPROTECT) $(32BIT) \
+	-D 'BUFFER_SIZE=64' \
+	-D PRINT_INITIAL_STACK \
+	-D 'PRINT_STACK_RANGE_HIGH=256' \
+	    -D 'PRINT_STACK_RANGE_LOW=0' \
+	    -D PRINT_FINAL_STACK \
+	    -D CLEAR_INITIAL_BUFFER \
+	-D 'PRINT_DESCRIPTION="\t Something different here, your buffer really contains two pointers, the first pointer is going to be copied to the address of the second pointer, you have a few bytes of space in your buffer to play with. Get a shell ."'
+
+
+# GOT Part 2
+level32: $(SRC)
+	$(CC) $(SRC) -o $@ \
+	$(NOSTACKPROTECT) $(32BIT) \
+	-D 'BUFFER_SIZE=8' \
+	-D PRINT_INITIAL_STACK \
+	-D 'PRINT_STACK_RANGE_HIGH=256' \
+	    -D 'PRINT_STACK_RANGE_LOW=0' \
+	    -D PRINT_FINAL_STACK \
+	    -D CLEAR_INITIAL_BUFFER \
+	-D 'PRINT_DESCRIPTION="\t As before, but no extra space this time."'
 
 
 
 
 ###########################################
-#  ROP Chaining                  
+#  ROP Chaining
+#  Need to add gadget functions, better with 64 bit                  
 ###########################################
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~s
