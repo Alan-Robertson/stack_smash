@@ -26,11 +26,22 @@
     #define MAIN_VARIABLE_FINAL_VALUES
 */
 
-/* And these are the global variables, you'll need a gadget to modify these
+/* These variables relate to enabling format strings
+    #define FSTRING_ENABLED
+    #define FSTRING_FIXED_ITERATIONS <N ITERATIONS>
+    #define FSTRING_ARB_ITERATIONS <END CONDITION>
+*/
+
+
+/* And these are the global variables
     #define GLOBAL_VARIABLE_ENABLED :: Enables global variables
     #define N_GLOBAL_VARIABLES :: 
     #define GLOBAL_VARIABLE_INITIAL_VALUE
     #define GLOBAL_VARIABLE_FINAL_VALUE
+*/
+
+/* GOT variables
+    #define GOT_LEAK
 */
 
 /* Arguments to echo() flags
@@ -78,6 +89,7 @@
 	#define PRINT_EBP_ECHO
     #define PRINT_ESP_ECHO
 
+
     #define PRINT_EXIT
 
     #define PRINT_BUFFER_LITERAL :: Prints the buffer directly allowing for format string vulns
@@ -120,13 +132,13 @@
         #endif
 
         #ifdef PRINT_ESP_ECHO
-    		register int esp_e  asm ("sp");
-    		printf("ESP in secret function: %x\n", esp_e);
+    		register int sp_e  asm ("sp");
+    		printf("SP in secret function: %x\n", sp_e);
     	#endif
 
     	#ifdef PRINT_EBP_ECHO
-    		register int ebp_e  asm ("bp");
-    		printf("ESP in secret function: %x\n", ebp_e);
+    		register int bp_e  asm ("bp");
+    		printf("BP in secret function: %x\n", bp_e);
     	#endif
 
 
@@ -219,7 +231,45 @@
         printf("\n\n\n");
     #endif
 
-    scanf("%s", buffer);
+
+    #ifdef FSTRING_ENABLED
+        printf("Writing to and printing from buffer\n");
+
+        #ifdef FSTRING_ARB_ITERATIONS
+            printf("This will continue reading and printing until EOF\n");            
+            while (EOF != scanf("%s", buffer))
+            {
+                printf(buffer);
+                printf("\n");
+            }
+        #else
+            #ifdef FSTRING_FIXED_ITERATIONS
+            printf("This will read and print %d times\n", FSTRING_FIXED_ITERATIONS);
+            for (int i = 0; i < FSTRING_FIXED_ITERATIONS; i++)
+            {
+                scanf("%s", buffer);
+                printf(buffer);
+                printf("\n%d iterations remaining \n", FSTRING_FIXED_ITERATIONS - i - 1);
+            }
+            #else
+                scanf("%s", buffer);
+            #endif
+        #endif
+
+    #endif
+
+
+    #ifdef SANITISED_BUFFER
+
+        fgets(buffer, BUFFER_SIZE, stdin);
+
+    #else
+
+        #ifndef NO_SCANF
+            scanf("%s", buffer);
+        #endif
+    #endif
+
 
     #ifndef PRINT_BUFFER_LITERAL
 

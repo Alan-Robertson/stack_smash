@@ -1,0 +1,62 @@
+## Introduction ##
+
+A set of problems based around learning the basics of smashing the stack in a modern context.
+
+REQUIREMENTS: Ability to compile both 32 bit and 64 bit binaries.
+
+Problem sets are roughly ordered by difficulty, however later problems in an earlier set may be harder than earlier problems in a later set.
+
+You can build a particular problem using `make <set>_levels<number>` where the set is the name of the problem set and the number is the problem in the set.
+
+Current Problem Sets:
+- stack     : Introduction to manipulating memory on the stack
+- shellcode : Try to get some shellcode running
+- fstring   : An intro to format string vulnerabilities
+- rlibc     : Try to return to libc
+- got       : Hammer the global offset table (still under construction)
+- rop       : Build gadgets for great victory (still under construction)
+
+More problems may be added to these sets
+
+Future Problem Sets:
+These haven't been written yet, but are aspired to.
+- heap      : A range of problems focusing on heap exploitation (houses of prime, mind etc)
+- strcpy    : Vulnerable strcpy rather than raw scanf/fgets
+- x64       : Porting to 64 bit
+- canary_ev : Problems focusing on avoiding the canary
+- aslr_ev   : Problems focusing on bypassing ASLR
+
+Feel free to write your own problems and submit a PR.
+
+## Problem Approach ##
+It's suggested that as you solve each problem you write a script to automate its execution.
+
+## Resources ##
+
+A few general things to start with:
+- K&R C
+- The gdb manual
+- Compilers: Principles, Techniques and Tools
+
+### stack ###
+The above, a basic understanding of the stack is all you need here.
+
+### Shellcode ###
+- Smashing the Stack for Fun and Profit
+- Shellcoder's Handbook
+
+### fstring ###
+- Exploiting Format String Vulnerabilities, scut / teso
+
+### rlibc ###
+- Bypassing non-executable-stack during exploitation using return-to-libc, c0ntex
+- Phrack 58 0x04, nergal
+
+### got ###
+- How to hijack the Global Offset Table with pointers for root shells, c0ntex
+
+### rop ###
+- Return-oriented Programming:Exploitation without Code Injection, Buchanan,Roemer, Savage, Shacham
+
+## Solutions ##
+Write your own, you'll learn a grand total of jack squat from this if you use automated tools or 
