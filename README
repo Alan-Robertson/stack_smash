@@ -13,8 +13,8 @@ Current Problem Sets:
 - shellcode : Try to get some shellcode running
 - fstring   : An intro to format string vulnerabilities
 - rlibc     : Try to return to libc
-- got       : Hammer the global offset table (still under construction)
-- rop       : Build gadgets for great victory (still under construction)
+- got       : Hammer the global offset table
+- rop       : Build gadgets for great victory
 
 More problems may be added to these sets
 

@@ -4,7 +4,7 @@ NOSTACKPROTECT = -fno-stack-protector
 32BIT= -m32
 OMITFRAMEPOINTER = -fomit-frame-pointer
 
-SRC := src/vuln.c
+SRC := src/stack_vuln.c
 CLEAN_TARGETS = *_level*
 
 SOURCES := $(wildcard $(SRC)/*.c)
@@ -536,30 +536,83 @@ rlibc_level2: $(SRC)
 # GOT Part 1
 got_level1: $(SRC)
 	$(CC) $(SRC) -o $@ \
-	$(NOSTACKPROTECT) $(32BIT) $(OMITFRAMEPOINTER) \
-	-D 'BUFFER_SIZE=64' \
+	$(32BIT) $(OMITFRAMEPOINTER) \
+	-D 'BUFFER_SIZE=9' \
 	-D PRINT_INITIAL_STACK \
-	-D 'PRINT_STACK_RANGE_HIGH=256' \
+	-D 'PRINT_STACK_RANGE_HIGH=12' \
 	    -D 'PRINT_STACK_RANGE_LOW=0' \
 	    -D PRINT_FINAL_STACK \
 	    -D CLEAR_INITIAL_BUFFER \
-	-D 'PRINT_DESCRIPTION="\t Something different here, your buffer really contains two pointers, the first pointer is going to be copied to the address of the second pointer, you have a few bytes of space in your buffer to play with. Get a shell ."'
+	-D GOT_LEAK \
+		-D 'GOT_CPY=4' \
+		-D GOT_SRC_BUF \
+	-D GLOBAL_VARIABLE_ENABLED \
+		-D GLOBAL_VARIABLE_CMP \
+		-D 'N_GLOBAL_VARIABLES=128' \
+		-D 'GLOBAL_VARIABLE_INITIAL_VALUE={0}' \
+		-D 'GLOBAL_VARIABLE_TARGET_INDEX=67' \
+		-D 'GLOBAL_VARIABLE_TARGET=0xFF' \
+		-D 'GLOBAL_VARIABLE_TARGET_FINAL_VALUE=0xAA' \
+	-D SANITISED_BUFFER \
+	-D 'PRINT_DESCRIPTION="\t Something different here, your buffer really contains two pointers, the first pointer is going to be copied to the address of the second pointer, you have a few bytes of space in your buffer to play with. Set the target value in the GOT to 0xAA."'
 
 
 # GOT Part 2
 got_level2: $(SRC)
 	$(CC) $(SRC) -o $@ \
-	$(NOSTACKPROTECT) $(32BIT) $(OMITFRAMEPOINTER) \
-	-D 'BUFFER_SIZE=8' \
+	$(32BIT) $(OMITFRAMEPOINTER) \
+	-D 'BUFFER_SIZE=9' \
+	-D PRINT_INITIAL_STACK \
+	-D 'PRINT_STACK_RANGE_HIGH=12' \
+	    -D 'PRINT_STACK_RANGE_LOW=0' \
+	    -D PRINT_FINAL_STACK \
+	    -D CLEAR_INITIAL_BUFFER \
+	-D GLOBAL_VARIABLE_ENABLED \
+		-D 'N_GLOBAL_VARIABLES=12' \
+		-D 'GLOBAL_VARIABLE_INITIAL_VALUE={0}' \
+	-D GOT_LEAK \
+		-D 'GOT_CPY=4' \
+		-D GOT_SRC_BUF \
+	-D FUNCTION_JUMP \
+	-D 'PRINT_DESCRIPTION="\t Same deal as before, this time try to get to the secret function"'
+
+
+
+# GOT Part 3
+got_level3: $(SRC)
+	$(CC) $(SRC) -o $@ \
+	$(32BIT) $(OMITFRAMEPOINTER) \
+	-D 'BUFFER_SIZE=9' \
+	-D PRINT_INITIAL_STACK \
+	-D 'PRINT_STACK_RANGE_HIGH=12' \
+	    -D 'PRINT_STACK_RANGE_LOW=0' \
+	    -D PRINT_FINAL_STACK \
+	    -D CLEAR_INITIAL_BUFFER \
+	-D GLOBAL_VARIABLE_ENABLED \
+		-D 'N_GLOBAL_VARIABLES=18' \
+		-D 'GLOBAL_VARIABLE_INITIAL_VALUE={0}' \
+	-D GOT_LEAK \
+		-D 'GOT_CPY=4' \
+	-D FUNCTION_JUMP \
+	-D 'PRINT_DESCRIPTION="\t Slight modification, we`re now setting dst to be the first four bytes and src to be the second four"'
+
+
+# GOT Part 4
+got_level4: $(SRC)
+	$(CC) $(SRC) -o $@ \
+	$(32BIT) $(OMITFRAMEPOINTER) \
+	-D 'BUFFER_SIZE=9' \
 	-D PRINT_INITIAL_STACK \
 	-D 'PRINT_STACK_RANGE_HIGH=256' \
 	    -D 'PRINT_STACK_RANGE_LOW=0' \
 	    -D PRINT_FINAL_STACK \
 	    -D CLEAR_INITIAL_BUFFER \
-	-D 'PRINT_DESCRIPTION="\t As before, but no extra space this time."'
-
-
-
+	-D GLOBAL_VARIABLE_ENABLED \
+		-D 'N_GLOBAL_VARIABLES=1024' \
+		-D 'GLOBAL_VARIABLE_INITIAL_VALUE={0}' \
+	-D GOT_LEAK \
+		-D 'GOT_CPY=4' \
+	-D 'PRINT_DESCRIPTION="\t Finally, let`s see if you can pop a shell"'
 
 ###########################################
 #  ROP Chaining
@@ -598,6 +651,7 @@ rop_level1 : $(SRC)
 	-D PRINT_MAIN_LOCATION \
 	-D FUNCTION_JUMP \
 	-D GLOBAL_VARIABLE_ENABLED \
+		-D GLOBAL_VARIABLE_CMP \
 		-D "N_GLOBAL_VARIABLES = 1" \
 	    -D "GLOBAL_VARIABLE_INITIAL_VALUE = {'\x01'}" \
 	    -D "GLOBAL_VARIABLE_FINAL_VALUE = {'\x02'}" \
@@ -634,6 +688,7 @@ rop_level2 : $(SRC)
 	-D PRINT_MAIN_LOCATION \
 	-D FUNCTION_JUMP \
 	-D GLOBAL_VARIABLE_ENABLED \
+		-D GLOBAL_VARIABLE_CMP \
 		-D "N_GLOBAL_VARIABLES = 1" \
 	    -D "GLOBAL_VARIABLE_INITIAL_VALUE = {'\x01'}" \
 	    -D "GLOBAL_VARIABLE_FINAL_VALUE = {'\x02'}" \
@@ -670,6 +725,7 @@ rop_level3 : $(SRC)
 	-D PRINT_MAIN_LOCATION \
 	-D FUNCTION_JUMP \
 	-D GLOBAL_VARIABLE_ENABLED \
+		-D GLOBAL_VARIABLE_CMP \
 		-D "N_GLOBAL_VARIABLES = 1" \
 	    -D "GLOBAL_VARIABLE_INITIAL_VALUE = {'\x01'}" \
 	    -D "GLOBAL_VARIABLE_FINAL_VALUE = {'\x05'}" \
@@ -706,6 +762,7 @@ rop_level4 : $(SRC)
 	-D PRINT_MAIN_LOCATION \
 	-D FUNCTION_JUMP \
 	-D GLOBAL_VARIABLE_ENABLED \
+		-D GLOBAL_VARIABLE_CMP \
 		-D "N_GLOBAL_VARIABLES = 1" \
 	    -D "GLOBAL_VARIABLE_INITIAL_VALUE = {'\x01'}" \
 	    -D "GLOBAL_VARIABLE_FINAL_VALUE = {'\x05'}" \
@@ -743,10 +800,11 @@ rop_level5 : $(SRC)
 	-D PRINT_MAIN_LOCATION \
 	-D FUNCTION_JUMP \
 	-D GLOBAL_VARIABLE_ENABLED \
+		-D GLOBAL_VARIABLE_CMP \
 		-D "N_GLOBAL_VARIABLES = 1" \
 	    -D "GLOBAL_VARIABLE_INITIAL_VALUE = {'\x01'}" \
 	    -D "GLOBAL_VARIABLE_FINAL_VALUE = {'\xff'}" \
-	    -D "HELP_STRING_FUNCT = global_variables[0]++" \
+	    -D "HELP_STRING_FUNCT = global_variables[0]--" \
 	    -D GLOBAL_CORRECTION_PRINT_OUTPUT \
 	-D 'PRINT_DESCRIPTION="Calling functions is an incredibly useful skill for ROP chaining.\n\t However, there are more functions than just those in the code.\n\t Get the global counter to have a value of `\\xff`.\n\n\n"'
 

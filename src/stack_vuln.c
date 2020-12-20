@@ -35,13 +35,18 @@
 
 /* And these are the global variables
     #define GLOBAL_VARIABLE_ENABLED :: Enables global variables
-    #define N_GLOBAL_VARIABLES :: 
-    #define GLOBAL_VARIABLE_INITIAL_VALUE
-    #define GLOBAL_VARIABLE_FINAL_VALUE
+    #define N_GLOBAL_VARIABLES :: Number of global variables
+    #define GLOBAL_VARIABLE_INITIAL_VALUE :: Initial values of globals
+    #define GLOBAL_VARIABLE_FINAL_VALUE :: Target values of globals
+
+    #define GLOBAL_VARIABLE_TARGET_INDEX :: Sets a particular variable in globals
+    #define GLOBAL_VARIABLE_TARGET :: Sets the value of index
+    #define GLOBAL_VARIABLE_TARGET_FINAL_VALUE :: Target value of the variable set by index
 */
 
 /* GOT variables
-    #define GOT_LEAK
+    #define GOT_LEAK :: Leaks a pointer address to a global
+    #define GOT_CPY <N>:: Copies the first N bytes of the buffer to the location of the second N bytes 
 */
 
 /* Arguments to echo() flags
@@ -82,11 +87,11 @@
 
     #define PRINT_EBP_INITIAL :: Prints the ESB at the start of the echo function
     #define PRINT_ESP_INITIAL :: Prints the ESB at the start of the echo function
-	
+    
     #define PRINT_EBP_FINAL
     #define PRINT_ESP_FINAL
 
-	#define PRINT_EBP_ECHO
+    #define PRINT_EBP_ECHO
     #define PRINT_ESP_ECHO
 
 
@@ -122,24 +127,24 @@
         printf("You have entered the secret function!\n");
 
         #ifdef PRINT_ECHO_FRAME
-        	BYTE frame_var = '\xaa';
-        	printf("The stack around the echo function:\n");
-        	for (int i = PRINT_ECHO_FRAME_INITIAL; i < PRINT_ECHO_FRAME_FINAL; i++)
-        	{
-        		printf("%.2x ", ((1 << 8) - 1) & (int)(&frame_var)[i]);
-        	}
-        	printf("\n");
+            BYTE frame_var = '\xaa';
+            printf("The stack around the echo function:\n");
+            for (int i = PRINT_ECHO_FRAME_INITIAL; i < PRINT_ECHO_FRAME_FINAL; i++)
+            {
+                printf("%.2x ", ((1 << 8) - 1) & (int)(&frame_var)[i]);
+            }
+            printf("\n");
         #endif
 
         #ifdef PRINT_ESP_ECHO
-    		register int sp_e  asm ("sp");
-    		printf("SP in secret function: %x\n", sp_e);
-    	#endif
+            register int sp_e  asm ("sp");
+            printf("SP in secret function: %x\n", sp_e);
+        #endif
 
-    	#ifdef PRINT_EBP_ECHO
-    		register int bp_e  asm ("bp");
-    		printf("BP in secret function: %x\n", bp_e);
-    	#endif
+        #ifdef PRINT_EBP_ECHO
+            register int bp_e  asm ("bp");
+            printf("BP in secret function: %x\n", bp_e);
+        #endif
 
 
             #ifdef HELP_STRING_FUNCT
@@ -195,21 +200,21 @@
     char buffer[BUFFER_SIZE];
 
     #ifdef PRINT_BUFFER_ADDRESS
-    	printf("The buffer starts at address: %x \n", buffer);
+        printf("The buffer starts at address: %x \n", buffer);
     #endif
     
     #ifdef PRINT_ESP_INITIAL
-    	register int esp_i  asm ("sp");
-    	printf("ESP : %x\n", esp_i);
+        register int esp_i  asm ("sp");
+        printf("ESP : %x\n", esp_i);
     #endif
 
     #ifdef PRINT_FUNCTION_POINTER
-	printf("%p\n", PRINT_FUNCTION_POINTER);
+    printf("%p\n", PRINT_FUNCTION_POINTER);
     #endif
 
     #ifdef PRINT_EBP_INITIAL
-    	register int ebp_i asm ("bp");
-    	printf("EBP : %x\n", ebp_i);
+        register int ebp_i asm ("bp");
+        printf("EBP : %x\n", ebp_i);
     #endif
 
     #ifdef ECHO_RETURN_ENABLED
@@ -291,16 +296,26 @@
         printf("\n\n\n");
     #endif
 
+    #ifdef GOT_CPY
+            void** dst = (void*)buffer;
+            #ifdef GOT_SRC_BUF
+                void* src = buffer + 4;
+                memcpy(*dst, src, GOT_CPY);
+            #else
+                void** src = (void*)buffer + 4;
+                memcpy(*dst, *src, GOT_CPY);
+            #endif
+    #endif
 
     #ifdef PRINT_ESP_FINAL
-    	register int esp_f  asm ("sp");
-    	printf("ESP : %x\n", esp_f);
+        register int esp_f  asm ("sp");
+        printf("ESP : %x\n", esp_f);
     #endif
 
 
     #ifdef PRINT_EBP_FINAL
-    	register int ebp_f asm ("bp");
-    	printf("EBP : %x\n", ebp_f);
+        register int ebp_f asm ("bp");
+        printf("EBP : %x\n", ebp_f);
     #endif
 
     #ifndef RETURN_TO_BUFFER
@@ -310,8 +325,8 @@
             return;
         #endif
     #else
-	    (*(void (*)()) (buffer + RETURN_TO_BUFFER_OFFSET))();
-	    return;
+        (*(void (*)()) (buffer + RETURN_TO_BUFFER_OFFSET))();
+        return;
     #endif
 
 }
@@ -325,9 +340,9 @@ int main()
 {
 
     #ifdef PRINT_DESCRIPTION
-    	printf("\n\n####################\n\n");
+        printf("\n\n####################\n\n");
         printf(PRINT_DESCRIPTION);
-    	printf("\n####################\n");
+        printf("\n####################\n");
     #endif
 
     #ifdef MAIN_VARIABLE_ENABLED
@@ -339,18 +354,17 @@ int main()
     #endif
 
     #ifdef PRINT_ESP_MAIN
-    	register int esp_m  asm ("sp");
-    	printf("Main ESP : %x\n", esp_m);
+        register int esp_m  asm ("sp");
+        printf("Main ESP : %x\n", esp_m);
     #endif
 
     #ifdef PRINT_EXIT
-    	printf("The exit function lives at : %x\n", exit);
+        printf("The exit function lives at : %x\n", exit);
     #endif
 
-
     #ifdef PRINT_EBP_MAIN
-    	register int ebp_m asm ("bp");
-    	printf("Main EBP : %x\n", ebp_m);
+        register int ebp_m asm ("bp");
+        printf("Main EBP : %x\n", ebp_m);
     #endif
 
     #ifdef PRINT_BUFFER_SIZE
@@ -370,6 +384,14 @@ int main()
         BYTE* b = malloc(sizeof(BYTE));
         printf("An address on the heap is at %p\n", b);
         free(b);
+    #endif
+
+    #ifdef GOT_LEAK
+        printf("An address on the GOT is at %p\n", global_variables);
+    #endif
+
+    #ifdef GLOBAL_VARIABLE_TARGET_INDEX
+        global_variables[GLOBAL_VARIABLE_TARGET_INDEX] = GLOBAL_VARIABLE_TARGET; 
     #endif
 
     #ifdef ECHO_RETURN_ENABLED
@@ -418,34 +440,47 @@ int main()
         }
     #endif
     
-    #ifdef GLOBAL_VARIABLE_ENABLED
-        BYTE global_variable_check[N_GLOBAL_VARIABLES] = GLOBAL_VARIABLE_FINAL_VALUE;
-        BYTE glob_flag = 1;
-        for (int i = 0; i < N_GLOBAL_VARIABLES; i++)
-        {
-            if (global_variables[i] != global_variable_check[i])
+    #ifdef GLOBAL_VARIABLE_CMP
+        #ifndef GLOBAL_VARIABLE_TARGET_INDEX
+            BYTE global_variable_check[N_GLOBAL_VARIABLES] = GLOBAL_VARIABLE_FINAL_VALUE;
+            BYTE glob_flag = 1;
+            for (int i = 0; i < N_GLOBAL_VARIABLES; i++)
             {
-                glob_flag = 0;
+                if (global_variables[i] != global_variable_check[i])
+                {
+                    glob_flag = 0;
+                }
             }
-        }
-        if (glob_flag == 1)
-        {
-        	printf("Global Values Matched!\n");	
-       	}
-       	else
-       	{
-        	printf("One of your global values is wrong!\n");
-       	}
-                        
-        #ifdef GLOBAL_CORRECTION_PRINT_OUTPUT
-         		printf("Current Values: \t Expected Values: \n");
-                for (int i = 0; i < N_GLOBAL_VARIABLES; i++)
-		        {
-		            printf("\t %.2x \t\t\t %.2x\n ", 
-		            	((1 << 8) - 1) & ((BYTE*)&global_variables)[i],
-		            	((1 << 8) - 1) & ((BYTE*)&global_variable_check)[i]);
-		        }
+            if (glob_flag == 1)
+            {
+                printf("Global Values Matched!\n"); 
+            }
+            else
+            {
+                printf("One of your global values is wrong!\n");
+            }
+                            
+            #ifdef GLOBAL_CORRECTION_PRINT_OUTPUT
+                    printf("Current Values: \t Expected Values: \n");
+                    for (int i = 0; i < N_GLOBAL_VARIABLES; i++)
+                    {
+                        printf("\t %.2x \t\t\t %.2x\n ", 
+                            ((1 << 8) - 1) & ((BYTE*)&global_variables)[i],
+                            ((1 << 8) - 1) & ((BYTE*)&global_variable_check)[i]);
+                    }
 
+            #endif
+        #else
+                    if ((BYTE)global_variables[GLOBAL_VARIABLE_TARGET_INDEX] == (BYTE)GLOBAL_VARIABLE_TARGET_FINAL_VALUE)
+                    {
+                        printf("Value matched in global variable!\n");
+                    }
+                    else
+                    {
+                        printf("Value not matched in global variable\nCurrent value is: %.2x\nTarget is: %.2x\n", 
+                            ((1 << 8) - 1) & ((BYTE*)&global_variables)[GLOBAL_VARIABLE_TARGET_INDEX], 
+                            GLOBAL_VARIABLE_TARGET_FINAL_VALUE);
+                    }
         #endif
     #endif
 
