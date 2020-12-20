@@ -484,8 +484,8 @@ fstring_level4: $(SRC)
 	-D 'BUFFER_SIZE=8' \
 	-D PRINT_BUFFER_LITERAL \
 	-D FSTRING_ENABLED \
-	-D NO_SCANF \ 
-	-D 'PRINT_DESCRIPTION="\t A single shot. Pop a shell."'
+	-D NO_SCANF \
+	-D 'PRINT_DESCRIPTION="\t A single shot. Pop a shell."' \
 
 
 fstring_level5: $(SRC)
@@ -493,15 +493,50 @@ fstring_level5: $(SRC)
 	$(NOSTACKPROTECT) $(32BIT) $(EXECSTACK) $(OMITFRAMEPOINTER) \
 	-D 'BUFFER_SIZE=64' \
 	-D PRINT_BUFFER_LITERAL \
-	-D SANITISED_BUFFER \ 
+	-D SANITISED_BUFFER \
 	-D 'PRINT_DESCRIPTION="\t One shot, and the buffer is actually limited."'
 
 ###########################################
 #  Return to Lib C                  
 ###########################################
 
-# Return to Lib C I
+# Return to Lib C 3
 rlibc_level1: $(SRC)
+	$(CC) $(SRC) -o $@ \
+	$(NOSTACKPROTECT) $(32BIT) $(OMITFRAMEPOINTER) \
+	-D 'BUFFER_SIZE=8' \
+	-D PRINT_INITIAL_STACK \
+	-D 'PRINT_STACK_RANGE_HIGH=256' \
+	    -D 'PRINT_STACK_RANGE_LOW=0' \
+	    -D PRINT_FINAL_STACK \
+	    -D CLEAR_INITIAL_BUFFER \
+	-D 'PRINT_FUNCTION_POINTER=memcpy' \
+	-D GLOBAL_VARIABLE_ENABLED \
+		-D 'N_GLOBAL_VARIABLES = 1' \
+		-D 'GLOBAL_VARIABLE_INITIAL_VALUE={0}' \
+		-D 'GLOBAL_VARIABLE_FINAL_VALUE = {42}' \
+	-D 'PRINT_DESCRIPTION="\t It seems that we need to modify a global variable now. Let`s try to set it to 42. Thankfully somebody has given us the address of memcpy."'
+
+# Return to Lib C 3
+rlibc_level2: $(SRC)
+	$(CC) $(SRC) -o $@ \
+	$(NOSTACKPROTECT) $(32BIT) $(OMITFRAMEPOINTER) \
+	-D 'BUFFER_SIZE=8' \
+	-D PRINT_INITIAL_STACK \
+	-D 'PRINT_STACK_RANGE_HIGH=256' \
+	    -D 'PRINT_STACK_RANGE_LOW=0' \
+	    -D PRINT_FINAL_STACK \
+	    -D CLEAR_INITIAL_BUFFER \
+	-D 'PRINT_FUNCTION_POINTER=printf' \
+	-D GLOBAL_VARIABLE_ENABLED \
+		-D 'N_GLOBAL_VARIABLES = 1' \
+		-D 'GLOBAL_VARIABLE_INITIAL_VALUE={0}' \
+		-D 'GLOBAL_VARIABLE_FINAL_VALUE = {97}' \
+	-D 'PRINT_DESCRIPTION="\t Let`s try that a second time, this time you`ve got the address of printf"'
+
+
+# Return to Lib C 3
+rlibc_level3: $(SRC)
 	$(CC) $(SRC) -o $@ \
 	$(NOSTACKPROTECT) $(32BIT) $(OMITFRAMEPOINTER) \
 	-D 'BUFFER_SIZE=8' \
@@ -514,8 +549,8 @@ rlibc_level1: $(SRC)
 	-D 'PRINT_DESCRIPTION="\t Oh dear, it seems that somebody has disabled stack execution. We won`t be dropping easy shellcodes anymore.\n\t Let`s give you those addresses back through, and we`ll give you the address of execl"'
 
 
-# Return to Lib C II
-rlibc_level2: $(SRC)
+# Return to Lib C 4
+rlibc_level4: $(SRC)
 	$(CC) $(SRC) -o $@ \
 	$(NOSTACKPROTECT) $(32BIT) $(OMITFRAMEPOINTER) \
 	-D 'BUFFER_SIZE=16' \
@@ -526,7 +561,18 @@ rlibc_level2: $(SRC)
 	    -D CLEAR_INITIAL_BUFFER \
 	-D 'PRINT_DESCRIPTION="\t No more execl addressing, you`ll need to figure it out."'
 
-
+# Return to Lib C 5
+rlibc_level5: $(SRC)
+	$(CC) $(SRC) -o $@ \
+	$(NOSTACKPROTECT) $(32BIT) $(OMITFRAMEPOINTER) \
+	-D 'BUFFER_SIZE=8' \
+	-D PRINT_INITIAL_STACK \
+	-D 'PRINT_STACK_RANGE_HIGH=256' \
+	    -D 'PRINT_STACK_RANGE_LOW=0' \
+	    -D PRINT_FINAL_STACK \
+	    -D CLEAR_INITIAL_BUFFER \
+	-D 'PRINT_FUNCTION_POINTER=mmap' \
+	-D 'PRINT_DESCRIPTION="\t I wonder what you could do with a pointer to mmap and a non executable stack... Maybe do the ROP problems then come back to this"'
 
 
 ###########################################
@@ -761,6 +807,10 @@ rop_level4 : $(SRC)
         -D PRINT_EBP_MAIN \
 	-D PRINT_MAIN_LOCATION \
 	-D FUNCTION_JUMP \
+		-D FUNCTION_VARIABLE_ENABLED \
+		-D FUNCION_ARGS_PTR \
+		-D FUNCTION_VARIABLE_SKIP_CHECK \
+		-D 'FUNCTION_ARGS_DECL = char arg' \
 	-D GLOBAL_VARIABLE_ENABLED \
 		-D GLOBAL_VARIABLE_CMP \
 		-D "N_GLOBAL_VARIABLES = 1" \
@@ -826,7 +876,7 @@ rop_level6 :  $(SRC)
 	    -D 'ECHO_RETURN_ARG_INITIAL_VALUE=170' \
 	    -D 'ECHO_RETURN_ARG_FINAL_VALUE=9' \
 	    -D ECHO_RETURN_CORRECTION_PRINT_OUTPUT \
-	    -D ECHO_RETURN_CORRECTION_PRINT_CORRECT\ 
+	    -D ECHO_RETURN_CORRECTION_PRINT_CORRECT \
 	-D 'PRINT_DESCRIPTION="\tLet`s wind back a little bit. all you need to do this time is get the value x09 onto the stack and return it.\n The byte you`re trying to target should be pre-filled with xAA. This likely won`t help you at all.\n\n\n"' \
 	
 

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/mman.h>
 
 #define BYTE char
 
@@ -152,26 +153,28 @@
             #endif
 
         #ifdef FUNCTION_VARIABLE_ENABLED
-            printf("But can you get the secret variable?\n");
+            #ifndef FUNCTION_VARIABLE_SKIP_CHECK
+                printf("But can you get the secret variable?\n");
 
 
-            BYTE function_variable_test[N_FUNCTION_BYTES] = FUNCTION_VARIABLE_FINAL_VALUE;
-            BYTE variable_match = '\x01';
-            for (int i = 0; i < N_FUNCTION_BYTES; i++) {
-                printf("Your current value is: %x\n", ((1 << 8) - 1) & ((BYTE*)FUNCTION_ARGS_PTR)[i]);
-                if (((BYTE*)FUNCTION_ARGS_PTR)[i] != function_variable_test[i])
-                {
-                    variable_match = '\x00';
+                BYTE function_variable_test[N_FUNCTION_BYTES] = FUNCTION_VARIABLE_FINAL_VALUE;
+                BYTE variable_match = '\x01';
+                for (int i = 0; i < N_FUNCTION_BYTES; i++) {
+                    printf("Your current value is: %x\n", ((1 << 8) - 1) & ((BYTE*)FUNCTION_ARGS_PTR)[i]);
+                    if (((BYTE*)FUNCTION_ARGS_PTR)[i] != function_variable_test[i])
+                    {
+                        variable_match = '\x00';
+                    }
                 }
-            }
-            if (variable_match)
-            {
-                printf("Values matched in secret function!\n");
-            }
-            else
-            {
-                printf("Your value doesn't match the secret value, try again!\n");
-            }
+                if (variable_match)
+                {
+                    printf("Values matched in secret function!\n");
+                }
+                else
+                {
+                    printf("Your value doesn't match the secret value, try again!\n");
+                }
+            #endif
         #endif
         printf("Secret function finished\n");
         return;
