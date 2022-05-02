@@ -25,6 +25,10 @@ These haven't been written yet, but are aspired to.
 - x64       : Porting to 64 bit
 - canary_ev : Problems focusing on avoiding the canary
 - aslr_ev   : Problems focusing on bypassing ASLR
+- dtors     : .DTORS as a target
+- atexit    : Atexit as a target
+- int_hand  : Interrupt handler as a target
+
 
 Feel free to write your own problems and submit a PR.
 
